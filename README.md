@@ -51,6 +51,19 @@ npm run deploy-commands
 npm run dev
 ```
 
+## 배포 시 주의사항 — `dist/`를 git에 커밋합니다
+
+이 저장소는 보통 관례와 다르게 **`dist/`(빌드 결과물)를 `.gitignore`에서 빼고 git에 커밋**합니다. 이유는 디스호스트 무료 티어(RAM 128MB)에서 `npm install` 중 `postinstall`로 `tsc` 빌드를 돌리면 리소스 부족으로 자주 실패해서, 새 코드가 배포됐는데도 오래된 `dist/`로 계속 실행되는 문제가 있었기 때문입니다. 그래서 `postinstall`은 `prisma generate`만 실행하고, **빌드는 로컬(또는 CI)에서 미리 해서 커밋**하는 방식으로 바꿨습니다.
+
+**코드를 수정한 뒤 push하기 전에 반드시:**
+```bash
+npm run build
+git add -A
+git commit -m "..."
+git push
+```
+빌드를 깜빡하면 디스호스트에는 여전히 예전 `dist/`가 배포되어, Discord에는 새 명령어가 등록되어 있는데 봇이 응답하지 않는(`The application did not respond`) 증상이 나타납니다.
+
 ## 현재 명령어
 
 | 명령어 | 설명 | DB 연동 |
