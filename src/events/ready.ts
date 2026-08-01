@@ -1,0 +1,7 @@
+import { Client, Events } from "discord.js";
+
+export function registerReady(client: Client): void {
+  client.once(Events.ClientReady, (readyClient) => {
+    console.log(`VALO LOUNGE bot logged in as ${readyClient.user.tag}`);
+  });
+}

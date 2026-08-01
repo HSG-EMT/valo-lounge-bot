@@ -1,0 +1,28 @@
+{
+  "name": "valo-lounge-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VALO LOUNGE PROJECT - Discord Bot (discord.js + TypeScript + Prisma/MySQL)",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "deploy-commands": "ts-node src/deploy-commands.ts",
+    "prisma:generate": "prisma generate",
+    "postinstall": "prisma generate && npm run build"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.20.0",
+    "axios": "^1.7.7",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.15",
+    "prisma": "^5.20.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.5.4"
+  }
+}

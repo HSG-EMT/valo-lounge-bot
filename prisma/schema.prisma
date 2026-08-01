@@ -1,0 +1,296 @@
+// This schema mirrors valo-lounge-server/prisma/schema.prisma.
+// Migrations are owned by valo-lounge-server — run `prisma migrate` there only.
+// This project only runs `prisma generate` against the same DATABASE_URL to get a typed client.
+// Keep the two schema.prisma files in sync by hand when models change.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ── 회원 시스템 ──────────────────────────────────────────
+
+model User {
+  id                String   @id @default(uuid())
+  discordId         String   @unique
+  discordUsername   String
+  discordAvatar     String?
+  email             String?
+  isAdmin           Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  riotAccount       RiotAccount?
+  statusLogs        StatusLog[]
+  serverPoint       ServerPoint?
+  casinoPoint       CasinoPoint?
+  eventDraws        EventDraw[]
+  attendance        Attendance?
+  voiceSessions     VoiceSession[]
+  hostedAuctions    AuctionRoom[]
+  stockHoldings     StockHolding[]
+
+  @@map("users")
+}
+
+model RiotAccount {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  puuid      String   @unique
+  gameName   String
+  tagLine    String
+  region     String
+  linkedAt   DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("riot_accounts")
+}
+
+model StatusLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String   // e.g. LOGIN, RIOT_LINK, EVENT_DRAW, PROFILE_UPDATE, DAILY_COIN, ATTENDANCE
+  detail    String?  @db.Text
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("status_logs")
+}
+
+// ── 출석 시스템 ──────────────────────────────────────────
+
+model Attendance {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  currentStreak Int       @default(0)
+  longestStreak Int       @default(0)
+  totalCount    Int       @default(0)
+  lastCheckIn   DateTime? // KST calendar-day granularity; see utils/date.ts
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("attendances")
+}
+
+// Voice channel join/leave sessions — written by this bot's VoiceStateUpdate
+// listener, read by the admin dashboard. leftAt/durationSeconds are null while
+// the session is still ongoing.
+model VoiceSession {
+  id              String    @id @default(uuid())
+  userId          String
+  channelId       String
+  channelName     String
+  joinedAt        DateTime
+  leftAt          DateTime?
+  durationSeconds Int?
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([leftAt])
+  @@map("voice_sessions")
+}
+
+// ── 경매 시스템 (팀장 포인트 경매 드래프트, teambid.app류) ──────
+// 웹 전용 기능 — 이 봇은 아직 사용하지 않지만, 스키마는 valo-lounge-server와
+// 동기화 규칙에 따라 그대로 미러링합니다.
+
+model AuctionRoom {
+  id             String    @id @default(uuid())
+  hostUserId     String
+  title          String
+  status         String    @default("WAITING")
+  startingBudget Int       @default(1000)
+  createdAt      DateTime  @default(now())
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  host           User             @relation(fields: [hostUserId], references: [id], onDelete: Cascade)
+  captains       AuctionCaptain[]
+  items          AuctionItem[]
+
+  @@map("auction_rooms")
+}
+
+model AuctionCaptain {
+  id          String   @id @default(uuid())
+  roomId      String
+  displayName String
+  budget      Int
+  joinToken   String   @unique
+  createdAt   DateTime @default(now())
+
+  room        AuctionRoom   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  wonItems    AuctionItem[]
+
+  @@map("auction_captains")
+}
+
+model AuctionItem {
+  id             String  @id @default(uuid())
+  roomId         String
+  name           String
+  order          Int
+  status         String  @default("PENDING")
+  soldPrice      Int?
+  wonByCaptainId String?
+
+  room           AuctionRoom     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  wonBy          AuctionCaptain? @relation(fields: [wonByCaptainId], references: [id])
+
+  @@index([roomId])
+  @@map("auction_items")
+}
+
+// ── 커뮤니티 ────────────────────────────────────────────
+
+// Snapshot of live Discord guild stats for the homepage. Written by this bot
+// (only place with a live gateway connection); the website just reads the
+// latest row. One row per guild.
+model GuildStats {
+  id               String   @id @default(uuid())
+  guildId          String   @unique
+  onlineCount      Int      @default(0)
+  voiceCount       Int      @default(0)
+  joinedTodayCount Int      @default(0)
+  joinedCountDate  String   // YYYY-MM-DD (KST) that joinedTodayCount applies to
+  updatedAt        DateTime @updatedAt
+
+  @@map("guild_stats")
+}
+
+model Notice {
+  id               String   @id @default(uuid())
+  discordMessageId String   @unique
+  channelId        String
+  title            String
+  content          String   @db.Text
+  publishedAt      DateTime
+  createdAt        DateTime @default(now())
+
+  @@map("notices")
+}
+
+// ── 이벤트 시스템 ────────────────────────────────────────
+
+model ServerPoint {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  points    Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("server_points")
+}
+
+// CP (Casino Point) — a separate balance from ServerPoint, earned only via
+// /낚시 (fishing) and spent/won only in /카지노 and the fishing rod shop.
+// Kept isolated from ServerPoint on purpose so casino-style gambling can't
+// touch the points earned from attendance/coin/random box.
+// rodTier indexes into this bot's static ROD_TIERS list (higher tier = better
+// odds at rare fish); tier 0 is the free starter rod everyone begins with.
+model CasinoPoint {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  points    Int      @default(0)
+  rodTier   Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("casino_points")
+}
+
+// ── 주식 시장 (CP 기반 가상 투자) ──────────────────────────
+
+// A fixed set of fictional companies, seeded by this bot at startup
+// (src/services/stock.service.ts owns SEED_STOCKS) and re-priced every few
+// minutes by a background tick. price/prevPrice are both in CP; prevPrice is
+// only what the previous tick set, so the market embed can show a % change
+// without a separate price-history table.
+model Stock {
+  id         String   @id @default(uuid())
+  symbol     String   @unique
+  name       String
+  price      Int      @default(1000)
+  prevPrice  Int      @default(1000)
+  volatility Int      @default(5) // max % swing applied per price tick
+  updatedAt  DateTime @updatedAt
+
+  holdings   StockHolding[]
+
+  @@map("stocks")
+}
+
+// One row per (user, stock) they've ever held shares of. avgBuyPrice is a
+// running weighted-average cost basis, used to compute unrealized/realized P/L.
+model StockHolding {
+  id          String   @id @default(uuid())
+  userId      String
+  stockId     String
+  quantity    Int      @default(0)
+  avgBuyPrice Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stock       Stock    @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, stockId])
+  @@map("stock_holdings")
+}
+
+model EventBox {
+  id          String       @id @default(uuid())
+  name        String
+  description String?      @db.Text
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+
+  prizes      EventPrize[]
+  draws       EventDraw[]
+
+  @@map("event_boxes")
+}
+
+// Plain String rather than a native enum (kept from when this schema targeted
+// SQLite; left as-is since it already works with MySQL too).
+// Valid values: "DISCORD_ROLE" | "SERVER_POINT" | "EVENT_PRIZE" (enforced in application code).
+model EventPrize {
+  id          String       @id @default(uuid())
+  eventBoxId  String
+  type        String
+  roleId      String?      // Discord role id, when type = DISCORD_ROLE
+  pointAmount Int?         // when type = SERVER_POINT
+  prizeName   String?      // when type = EVENT_PRIZE
+  weight      Int          @default(1) // random draw weight
+  stock       Int?         // null = unlimited
+
+  eventBox    EventBox     @relation(fields: [eventBoxId], references: [id], onDelete: Cascade)
+  draws       EventDraw[]
+
+  @@map("event_prizes")
+}
+
+model EventDraw {
+  id         String     @id @default(uuid())
+  userId     String
+  eventBoxId String
+  prizeId    String
+  drawnAt    DateTime   @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventBox   EventBox   @relation(fields: [eventBoxId], references: [id], onDelete: Cascade)
+  prize      EventPrize @relation(fields: [prizeId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("event_draws")
+}
