@@ -1,6 +1,7 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { prisma } from "../config/prisma";
 import { ensureUser } from "../services/points.service";
+import { tryUnlockAchievement, unlockBanner } from "../services/achievement.service";
 import { Command } from "../types/command";
 import { buildEmbed, CASINO_TEAL } from "../utils/embed";
 
@@ -43,11 +44,12 @@ export const casinoCommand: Command = {
 
     const won = Math.random() < WIN_CHANCE;
     const delta = won ? bet : -bet;
+    const nextStreak = won ? user.casinoPoint.casinoWinStreak + 1 : 0;
 
     const [casinoPoint] = await prisma.$transaction([
       prisma.casinoPoint.update({
         where: { userId: user.id },
-        data: { points: { increment: delta } },
+        data: { points: { increment: delta }, casinoWinStreak: nextStreak },
       }),
       prisma.statusLog.create({
         data: {
@@ -58,13 +60,18 @@ export const casinoCommand: Command = {
       }),
     ]);
 
+    let description = `┌ 베팅 ${bet.toLocaleString()}CP · 승률 47%\n└ 결과 ${won ? "**+" : "**-"}${bet.toLocaleString()}CP**`;
+
+    if (nextStreak >= 5) {
+      const unlocked = await tryUnlockAchievement(user.id, "CASINO_STREAK_5");
+      if (unlocked) description += unlockBanner(unlocked);
+    }
+
     const embed = new EmbedBuilder()
       .setColor(CASINO_TEAL)
       .setAuthor({ name: "🎰 VALO LOUNGE CASINO" })
       .setTitle(won ? "「 🪙 승리! 」" : "「 💸 패배... 」")
-      .setDescription(
-        `┌ 베팅 ${bet.toLocaleString()}CP · 승률 47%\n└ 결과 ${won ? "**+" : "**-"}${bet.toLocaleString()}CP**`
-      )
+      .setDescription(description)
       .setFooter({ text: `현재 보유 CP: ${casinoPoint.points.toLocaleString()}CP` })
       .setTimestamp();
 

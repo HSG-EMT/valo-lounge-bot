@@ -2,6 +2,7 @@ import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { prisma } from "../config/prisma";
 import { ROD_TIERS } from "../config/fishing";
 import { ensureUser } from "../services/points.service";
+import { tryUnlockAchievement, unlockBanner } from "../services/achievement.service";
 import { Command } from "../types/command";
 import { buildEmbed, CASINO_TEAL } from "../utils/embed";
 
@@ -59,11 +60,17 @@ export const fishingShopCommand: Command = {
         }),
       ]);
 
+      let boughtDescription = `┌ 가격 -${nextRod.cost.toLocaleString()}CP\n└ 고급 물고기를 낚을 확률이 올라갑니다`;
+      if (nextTier === ROD_TIERS.length - 1) {
+        const unlocked = await tryUnlockAchievement(user.id, "ROD_MAX");
+        if (unlocked) boughtDescription += unlockBanner(unlocked);
+      }
+
       const boughtEmbed = new EmbedBuilder()
         .setColor(CASINO_TEAL)
         .setAuthor({ name: "🎣 VALO LOUNGE FISHING SHOP" })
         .setTitle(`「 ${nextRod.emoji} ${nextRod.name} 구매 완료! 」`)
-        .setDescription(`┌ 가격 -${nextRod.cost.toLocaleString()}CP\n└ 고급 물고기를 낚을 확률이 올라갑니다`)
+        .setDescription(boughtDescription)
         .setFooter({ text: `남은 CP: ${casinoPoint.points.toLocaleString()}CP` })
         .setTimestamp();
 

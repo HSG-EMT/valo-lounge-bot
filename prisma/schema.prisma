@@ -33,6 +33,7 @@ model User {
   voiceSessions     VoiceSession[]
   hostedAuctions    AuctionRoom[]
   stockHoldings     StockHolding[]
+  achievements      Achievement[]
 
   @@map("users")
 }
@@ -199,15 +200,39 @@ model ServerPoint {
 // rodTier indexes into this bot's static ROD_TIERS list (higher tier = better
 // odds at rare fish); tier 0 is the free starter rod everyone begins with.
 model CasinoPoint {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  points    Int      @default(0)
-  rodTier   Int      @default(0)
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  points          Int      @default(0)
+  rodTier         Int      @default(0)
+  // Consecutive /카지노 wins in a row (resets to 0 on a loss) — powers the
+  // CASINO_STREAK_5 achievement. Kept here rather than derived from StatusLog
+  // history so the check stays a cheap field read instead of a log scan.
+  casinoWinStreak Int      @default(0)
+  // Running total of realized P/L across all /주식 sells — powers the
+  // STOCK_PROFIT_10000 achievement.
+  stockRealizedPl Int      @default(0)
+  updatedAt       DateTime @updatedAt
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("casino_points")
+}
+
+// ── 업적/뱃지 시스템 ────────────────────────────────────────
+
+// One row per unlocked badge. `key` matches an entry in this bot's static
+// ACHIEVEMENTS catalog (src/config/achievements.ts) — no admin UI to define
+// new achievements yet, they're code-defined like fish grades/rod tiers/stocks.
+model Achievement {
+  id         String   @id @default(uuid())
+  userId     String
+  key        String
+  unlockedAt DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@map("achievements")
 }
 
 // ── 주식 시장 (CP 기반 가상 투자) ──────────────────────────

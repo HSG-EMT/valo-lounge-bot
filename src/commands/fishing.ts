@@ -2,6 +2,7 @@ import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { prisma } from "../config/prisma";
 import { ROD_TIERS, rollFish } from "../config/fishing";
 import { ensureUser } from "../services/points.service";
+import { tryUnlockAchievement, unlockBanner } from "../services/achievement.service";
 import { Command } from "../types/command";
 import { formatRemainingShort, getCooldownRemainingMs } from "../utils/cooldown";
 import { buildEmbed, CASINO_TEAL } from "../utils/embed";
@@ -50,9 +51,17 @@ export const fishingCommand: Command = {
       }),
     ]);
 
-    const description = isCatch
+    let description = isCatch
       ? `┌ ${rod.emoji} ${rod.name}(으)로 낚는 중\n│ ${grade.emoji} **${grade.name}** 획득 — **+${amount.toLocaleString()}CP**\n└ CP는 /카지노·/낚시대상점·/주식에서 쓸 수 있어요`
       : `┌ ${rod.emoji} ${rod.name}(으)로 낚는 중\n│ 🥾 아무것도 걸리지 않았습니다\n└ 낚시대를 업그레이드하면 고급 물고기 확률이 올라가요`;
+
+    if (grade.name === "전설") {
+      const unlocked = await tryUnlockAchievement(user.id, "FISH_LEGENDARY");
+      if (unlocked) description += unlockBanner(unlocked);
+    } else if (grade.name === "심연의 괴물") {
+      const unlocked = await tryUnlockAchievement(user.id, "FISH_ABYSS");
+      if (unlocked) description += unlockBanner(unlocked);
+    }
 
     const embed = new EmbedBuilder()
       .setColor(CASINO_TEAL)

@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from "
 import { prisma } from "../config/prisma";
 import { SEED_STOCKS } from "../config/stocks";
 import { ensureUser } from "../services/points.service";
+import { tryUnlockAchievement, unlockBanner } from "../services/achievement.service";
 import { Command } from "../types/command";
 import { buildEmbed, CASINO_TEAL } from "../utils/embed";
 
@@ -154,7 +155,10 @@ async function handleSell(interaction: ChatInputCommandInteraction) {
     remainingQty > 0
       ? prisma.stockHolding.update({ where: { id: holding.id }, data: { quantity: remainingQty } })
       : prisma.stockHolding.delete({ where: { id: holding.id } }),
-    prisma.casinoPoint.update({ where: { userId: user.id }, data: { points: { increment: proceeds } } }),
+    prisma.casinoPoint.update({
+      where: { userId: user.id },
+      data: { points: { increment: proceeds }, stockRealizedPl: { increment: realizedPl } },
+    }),
     prisma.statusLog.create({
       data: {
         userId: user.id,
@@ -165,13 +169,18 @@ async function handleSell(interaction: ChatInputCommandInteraction) {
   ]);
 
   const plIcon = realizedPl >= 0 ? "📈" : "📉";
+  let description = `┌ ${stock.name}\n│ ${quantity}주 × ${stock.price.toLocaleString()}CP = **+${proceeds.toLocaleString()}CP**\n└ 실현 손익 ${plIcon} **${plSign}${realizedPl.toLocaleString()}CP**`;
+
+  if (casinoPoint.stockRealizedPl >= 10000) {
+    const unlocked = await tryUnlockAchievement(user.id, "STOCK_PROFIT_10000");
+    if (unlocked) description += unlockBanner(unlocked);
+  }
+
   const embed = new EmbedBuilder()
     .setColor(CASINO_TEAL)
     .setAuthor({ name: "💹 VALO LOUNGE STOCK EXCHANGE" })
     .setTitle(`「 📉 ${stock.symbol} 매도 체결 」`)
-    .setDescription(
-      `┌ ${stock.name}\n│ ${quantity}주 × ${stock.price.toLocaleString()}CP = **+${proceeds.toLocaleString()}CP**\n└ 실현 손익 ${plIcon} **${plSign}${realizedPl.toLocaleString()}CP**`
-    )
+    .setDescription(description)
     .setFooter({ text: `현재 CP: ${casinoPoint.points.toLocaleString()}CP` })
     .setTimestamp();
 

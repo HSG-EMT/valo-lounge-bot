@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { prisma } from "../config/prisma";
 import { ensureUser } from "../services/points.service";
+import { tryUnlockAchievement, unlockBanner } from "../services/achievement.service";
 import { Command } from "../types/command";
 import { isSameDay, isYesterday } from "../utils/date";
 import { buildEmbed } from "../utils/embed";
@@ -8,6 +9,7 @@ import { buildEmbed } from "../utils/embed";
 const BASE_REWARD = 20;
 // streak length -> extra one-time bonus on top of BASE_REWARD
 const MILESTONE_BONUS: Record<number, number> = { 7: 50, 30: 200, 100: 500 };
+const STREAK_ACHIEVEMENTS: Record<number, string> = { 7: "ATTENDANCE_7", 30: "ATTENDANCE_30", 100: "ATTENDANCE_100" };
 const ACTION = "ATTENDANCE";
 
 export const attendanceCommand: Command = {
@@ -66,15 +68,23 @@ export const attendanceCommand: Command = {
         ? `│ **+${reward}P** (기본 ${BASE_REWARD}P + ${newStreak}일 연속 보너스 🎉 ${milestoneBonus}P)`
         : `│ **+${reward}P**`;
 
+    let description = [
+      `┌ 연속 출석 **${updatedAttendance.currentStreak}일** (최장 ${updatedAttendance.longestStreak}일) · 총 ${updatedAttendance.totalCount}일`,
+      rewardLine,
+      `└ ✅ 오늘도 출석 완료!`,
+    ].join("\n");
+
+    const achievementKey = STREAK_ACHIEVEMENTS[newStreak];
+    if (achievementKey) {
+      const unlocked = await tryUnlockAchievement(user.id, achievementKey);
+      if (unlocked) description += unlockBanner(unlocked);
+    }
+
     await interaction.editReply({
       embeds: [
         buildEmbed({
           title: continuedStreak ? "📅 출석체크 완료!" : "📅 출석체크 완료! (새로운 시작)",
-          description: [
-            `┌ 연속 출석 **${updatedAttendance.currentStreak}일** (최장 ${updatedAttendance.longestStreak}일) · 총 ${updatedAttendance.totalCount}일`,
-            rewardLine,
-            `└ ✅ 오늘도 출석 완료!`,
-          ].join("\n"),
+          description,
           author: "📅 VALO LOUNGE",
           footer: `현재 보유 포인트: ${serverPoint.points.toLocaleString()}P`,
         }),
