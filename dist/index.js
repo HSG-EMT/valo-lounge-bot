@@ -18,6 +18,7 @@ const guildStats_1 = require("./events/guildStats");
 const interactionCreate_1 = require("./events/interactionCreate");
 const noticeSync_1 = require("./events/noticeSync");
 const ready_1 = require("./events/ready");
+const serverLogging_1 = require("./events/serverLogging");
 const stockMarket_1 = require("./events/stockMarket");
 const voiceTracking_1 = require("./events/voiceTracking");
 const notice_service_1 = require("./services/notice.service");
@@ -44,9 +45,10 @@ const client = new discord_js_1.Client({
         discord_js_1.GatewayIntentBits.GuildVoiceStates,
         // Privileged intents — must be enabled under Bot > Privileged Gateway Intents
         // in the Discord Developer Portal, or the bot fails to log in.
-        discord_js_1.GatewayIntentBits.GuildMembers, // resolves voice channel members for /팀짜기
-        discord_js_1.GatewayIntentBits.GuildMessages, // receives messages for notice sync
-        discord_js_1.GatewayIntentBits.MessageContent, // reads message text/embeds for notice sync
+        discord_js_1.GatewayIntentBits.GuildMembers, // resolves voice channel members for /팀짜기, also powers join/leave/nickname logs
+        discord_js_1.GatewayIntentBits.GuildMessages, // receives messages for notice sync + message edit/delete logs
+        discord_js_1.GatewayIntentBits.MessageContent, // reads message text/embeds for notice sync + message edit/delete logs
+        discord_js_1.GatewayIntentBits.GuildModeration, // ban log — not privileged, no Developer Portal toggle needed
     ],
 });
 (0, ready_1.registerReady)(client);
@@ -55,6 +57,7 @@ const client = new discord_js_1.Client({
 (0, guildStats_1.registerGuildStats)(client);
 (0, voiceTracking_1.registerVoiceTracking)(client);
 (0, stockMarket_1.registerStockMarket)(client);
+(0, serverLogging_1.registerServerLogging)(client);
 client.once(discord_js_1.Events.ClientReady, () => {
     (0, notice_service_1.backfillNotices)(client).catch((err) => console.error("Notice backfill failed:", err));
 });

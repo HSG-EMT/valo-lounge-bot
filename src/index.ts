@@ -16,6 +16,7 @@ import { registerGuildStats } from "./events/guildStats";
 import { registerInteractionCreate } from "./events/interactionCreate";
 import { registerNoticeSync } from "./events/noticeSync";
 import { registerReady } from "./events/ready";
+import { registerServerLogging } from "./events/serverLogging";
 import { registerStockMarket } from "./events/stockMarket";
 import { registerVoiceTracking } from "./events/voiceTracking";
 import { backfillNotices } from "./services/notice.service";
@@ -45,9 +46,10 @@ const client = new Client({
     GatewayIntentBits.GuildVoiceStates,
     // Privileged intents — must be enabled under Bot > Privileged Gateway Intents
     // in the Discord Developer Portal, or the bot fails to log in.
-    GatewayIntentBits.GuildMembers, // resolves voice channel members for /팀짜기
-    GatewayIntentBits.GuildMessages, // receives messages for notice sync
-    GatewayIntentBits.MessageContent, // reads message text/embeds for notice sync
+    GatewayIntentBits.GuildMembers, // resolves voice channel members for /팀짜기, also powers join/leave/nickname logs
+    GatewayIntentBits.GuildMessages, // receives messages for notice sync + message edit/delete logs
+    GatewayIntentBits.MessageContent, // reads message text/embeds for notice sync + message edit/delete logs
+    GatewayIntentBits.GuildModeration, // ban log — not privileged, no Developer Portal toggle needed
   ],
 });
 
@@ -57,6 +59,7 @@ registerNoticeSync(client);
 registerGuildStats(client);
 registerVoiceTracking(client);
 registerStockMarket(client);
+registerServerLogging(client);
 
 client.once(Events.ClientReady, () => {
   backfillNotices(client).catch((err) => console.error("Notice backfill failed:", err));

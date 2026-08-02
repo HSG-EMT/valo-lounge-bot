@@ -25,6 +25,7 @@ copy .env.example .env   # PowerShell: Copy-Item .env.example .env
 - `DISCORD_GUILD_ID` — 슬래시 명령어를 등록할 개발용 서버 ID
 - `RIOT_API_KEY` — `/전적` 명령어에만 필요 (선택). [Riot Developer Portal](https://developer.riotgames.com)에서 발급받은 **개인(Personal) 키는 24시간마다 만료**되니, 실제 서비스에는 Production 키 신청이 필요합니다. 비워두면 `/전적`만 비활성화되고 나머지 명령어는 정상 동작합니다.
 - `ANNOUNCEMENT_CHANNEL_ID` — 웹사이트 커뮤니티 페이지에 동기화할 공지 채널 ID (선택). 비워두면 공지 동기화가 꺼진 채로 나머지는 정상 동작합니다.
+- `LOG_CHANNEL_*` (8개, 전부 선택) — 서버 활동 로그를 보낼 채널 ID들. 아래 "서버 활동 로그" 참고. 비워두면 해당 로그 타입만 개별적으로 꺼지고 나머지는 정상 동작합니다.
 
 ### Discord Developer Portal — Privileged Gateway Intents
 
@@ -119,6 +120,27 @@ CP로 투자하는 가상 주식 시장입니다. 실제 회사가 아닌 6개�
 - 출석: 7일/30일/100일 연속 출석 (기존 포인트 마일스톤 보너스와 별개로 뱃지도 지급)
 
 새 업적을 추가하려면 `ACHIEVEMENTS` 배열에 항목을 추가하고, 해당 조건이 발생하는 명령어에서 `tryUnlockAchievement(user.id, key)`를 호출하면 됩니다.
+
+## 서버 활동 로그 (StatBot류)
+
+`src/events/serverLogging.ts`가 8가지 서버 활동을 각각 지정된 채널에 실시간으로 기록합니다. DB에는 저장하지 않고 바로 해당 Discord 채널에 임베드로 전송하는 방식입니다 (음성 채널 접속 기록은 이것과 별개로 `VoiceSession` 테이블에도 저장되어 관리자 페이지에서 조회 가능 — 위 "음성 채널 활동 기록" 참고).
+
+| 환경변수 | 로그 내용 |
+|---|---|
+| `LOG_CHANNEL_MEMBER_JOIN` | 서버 입장 (유저, 계정 생성일, 현재 인원수) |
+| `LOG_CHANNEL_MEMBER_LEAVE` | 서버 퇴장 (유저, 마지막 보유 역할) |
+| `LOG_CHANNEL_NICKNAME_CHANGE` | 닉네임 변경 (이전 → 이후) |
+| `LOG_CHANNEL_BAN` | 차단 (대상, 사유) |
+| `LOG_CHANNEL_VOICE_JOIN` | 음성채널 입장 |
+| `LOG_CHANNEL_VOICE_LEAVE` | 음성채널 퇴장 |
+| `LOG_CHANNEL_MESSAGE_EDIT` | 메시지 수정 (이전 내용 → 이후 내용) |
+| `LOG_CHANNEL_MESSAGE_DELETE` | 메시지 삭제 (삭제된 내용) |
+
+- 각 로그는 완전히 독립적으로 켜고 끌 수 있습니다 — 해당 환경변수를 비워두면 그 로그 타입만 조용히 꺼지고 나머지는 그대로 동작합니다 (`sendLog` 헬퍼가 빈 채널 ID를 그냥 무시).
+- 채널을 못 찾거나 전송 권한이 없는 경우에도 에러를 콘솔에만 남기고 봇 자체는 계속 동작합니다.
+- 메시지 수정/삭제 로그는 discord.js 캐시에 있는 메시지에 한해 "이전 내용"을 보여줄 수 있습니다 — 봇 재시작 전에 보낸 메시지처럼 캐시에 없는 경우 "(캐시에 없어서 이전 내용 확인 불가)"로 표시됩니다. 이건 Discord API 자체의 한계입니다 (Discord가 옛 메시지 원문을 봇에게 다시 안 줌).
+- 봇 메시지가 보낸 메시지는 수정/삭제 로그에서 제외됩니다.
+- 차단 로그는 `GatewayIntentBits.GuildModeration` 인텐트가 필요합니다 — 이건 Privileged가 아니라서 Developer Portal에서 별도로 켤 필요는 없습니다.
 
 ## 공지 동기화
 
