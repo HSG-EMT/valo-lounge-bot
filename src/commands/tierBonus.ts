@@ -28,6 +28,7 @@ export const tierBonusCommand: Command = {
             title: "💠 등급 보너스",
             description: `플래티넘 등급(Lv.51)부터 이용할 수 있습니다.\n현재 등급: ${tier.emoji} ${tier.name} (Lv.${level})`,
             color: CASINO_TEAL,
+            author: "💠 VALO LOUNGE TIER BONUS",
           }),
         ],
       });
@@ -42,6 +43,7 @@ export const tierBonusCommand: Command = {
             title: "💠 등급 보너스",
             description: `오늘의 등급 보너스는 이미 받으셨습니다.\n**${formatRemaining(remaining)}** 후 다시 시도해주세요.`,
             color: CASINO_TEAL,
+            author: "💠 VALO LOUNGE TIER BONUS",
           }),
         ],
       });
@@ -59,6 +61,7 @@ export const tierBonusCommand: Command = {
           title: "💠 등급 보너스 지급!",
           description: `┌ ${getTier(level).emoji} ${getTier(level).name} 등급 전용 보너스\n└ **+${BONUS_AMOUNT}CP**`,
           color: CASINO_TEAL,
+          author: "💠 VALO LOUNGE TIER BONUS",
           footer: `현재 보유 CP: ${casinoPoint.points.toLocaleString()}CP`,
         }),
       ],

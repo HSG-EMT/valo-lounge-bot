@@ -13,6 +13,7 @@ export interface Tier {
   minLevel: number;
   maxLevel: number;
   emoji: string;
+  color: number;
   benefits: string[];
 }
 
@@ -20,18 +21,36 @@ export interface Tier {
 // benefits stack (a Gold member keeps Silver's attendance bonus, etc.), see
 // cumulativeBenefits() below for the full accumulated list. The mechanical
 // checks (hasAttendanceBonus/hasDailyCpBonus) key off tier rank, not off
-// re-listing the same string on every later tier.
+// re-listing the same string on every later tier. `color` tints /레벨's embed
+// per tier so leveling up visibly changes the card, not just the text.
 export const TIERS: Tier[] = [
-  { key: "BRONZE", name: "브론즈", minLevel: 1, maxLevel: 10, emoji: "🥉", benefits: ["일반 라운지 멤버"] },
-  { key: "SILVER", name: "실버", minLevel: 11, maxLevel: 30, emoji: "🥈", benefits: ["출석체크 경험치 추가 획득"] },
-  { key: "GOLD", name: "골드", minLevel: 31, maxLevel: 50, emoji: "🏅", benefits: ["등급 뱃지 표시"] },
-  { key: "PLATINUM", name: "플래티넘", minLevel: 51, maxLevel: 75, emoji: "💠", benefits: ["하루 1회 CP 보너스 (/등급보너스)"] },
+  { key: "BRONZE", name: "브론즈", minLevel: 1, maxLevel: 10, emoji: "🥉", color: 0xcd7f32, benefits: ["일반 라운지 멤버"] },
+  {
+    key: "SILVER",
+    name: "실버",
+    minLevel: 11,
+    maxLevel: 30,
+    emoji: "🥈",
+    color: 0xadb5bd,
+    benefits: ["출석체크 경험치 추가 획득"],
+  },
+  { key: "GOLD", name: "골드", minLevel: 31, maxLevel: 50, emoji: "🏅", color: 0xf5c518, benefits: ["등급 뱃지 표시"] },
+  {
+    key: "PLATINUM",
+    name: "플래티넘",
+    minLevel: 51,
+    maxLevel: 75,
+    emoji: "💠",
+    color: 0x17c3a2,
+    benefits: ["하루 1회 CP 보너스 (/등급보너스)"],
+  },
   {
     key: "DIAMOND",
     name: "다이아몬드",
     minLevel: 76,
     maxLevel: 95,
     emoji: "💎",
+    color: 0x8b5cf6,
     benefits: ["고급 랜덤상자 선물 (준비 중)", "전용 칭호"],
   },
   {
@@ -40,6 +59,7 @@ export const TIERS: Tier[] = [
     minLevel: 96,
     maxLevel: 100,
     emoji: "👑",
+    color: 0xff4655,
     benefits: ["희귀 랜덤상자 선물 (준비 중)", "최상위 VIP 칭호"],
   },
 ];

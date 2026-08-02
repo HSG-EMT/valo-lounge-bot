@@ -24,8 +24,18 @@ async function sendLog(client, channelId, embed) {
         console.error(`Failed to send log to channel ${channelId}:`, err);
     }
 }
-function logEmbed(title, description, color = embed_1.VALO_RED) {
-    return new discord_js_1.EmbedBuilder().setColor(color).setTitle(title).setDescription(description).setTimestamp();
+function logEmbed(opts) {
+    const embed = new discord_js_1.EmbedBuilder()
+        .setColor(opts.color ?? embed_1.VALO_RED)
+        .setAuthor({ name: opts.author ?? "📋 VALO LOUNGE SERVER LOG" })
+        .setTitle(`「 ${opts.title} 」`)
+        .setDescription(opts.description)
+        .setTimestamp();
+    if (opts.footer)
+        embed.setFooter({ text: opts.footer });
+    if (opts.thumbnail)
+        embed.setThumbnail(opts.thumbnail);
+    return embed;
 }
 // Discord doesn't send old message content for messages the client hasn't
 // cached (e.g. sent before this process started) — MessageUpdate/MessageDelete

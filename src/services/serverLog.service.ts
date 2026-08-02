@@ -20,8 +20,23 @@ export async function sendLog(client: Client, channelId: string, embed: EmbedBui
   }
 }
 
-export function logEmbed(title: string, description: string, color: number = VALO_RED): EmbedBuilder {
-  return new EmbedBuilder().setColor(color).setTitle(title).setDescription(description).setTimestamp();
+export function logEmbed(opts: {
+  title: string;
+  description: string;
+  color?: number;
+  author?: string;
+  footer?: string;
+  thumbnail?: string;
+}): EmbedBuilder {
+  const embed = new EmbedBuilder()
+    .setColor(opts.color ?? VALO_RED)
+    .setAuthor({ name: opts.author ?? "📋 VALO LOUNGE SERVER LOG" })
+    .setTitle(`「 ${opts.title} 」`)
+    .setDescription(opts.description)
+    .setTimestamp();
+  if (opts.footer) embed.setFooter({ text: opts.footer });
+  if (opts.thumbnail) embed.setThumbnail(opts.thumbnail);
+  return embed;
 }
 
 // Discord doesn't send old message content for messages the client hasn't

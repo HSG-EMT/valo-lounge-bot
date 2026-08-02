@@ -48,6 +48,7 @@ async function handleUser(interaction: ChatInputCommandInteraction) {
     .setColor(VALO_RED)
     .setAuthor({ name: "📊 VALO LOUNGE STATS" })
     .setTitle(`「 ${target.username} 사용량 조사 」`)
+    .setThumbnail(target.displayAvatarURL())
     .addFields(
       { name: "🔊 누적 음성 채널 시간", value: formatDuration(voiceSeconds), inline: true },
       { name: "💬 누적 메시지 수", value: `${(messageStat?.totalCount ?? 0).toLocaleString()}개`, inline: true },
@@ -73,6 +74,7 @@ async function handleVoiceRanking(interaction: ChatInputCommandInteraction) {
     .setAuthor({ name: "📊 VALO LOUNGE STATS" })
     .setTitle("「 🔊 음성 채널 사용량 순위 」")
     .setDescription(leaderboardDescription(entries, formatDuration))
+    .setFooter({ text: `${entries.length}명 표시 · 접속 중인 세션은 지금 기준으로 반영됩니다` })
     .setTimestamp();
 
   await interaction.editReply({ embeds: [embed] });
@@ -88,6 +90,7 @@ async function handleMessageRanking(interaction: ChatInputCommandInteraction) {
     .setAuthor({ name: "📊 VALO LOUNGE STATS" })
     .setTitle("「 💬 메시지 수 순위 」")
     .setDescription(leaderboardDescription(entries, (v) => `${v.toLocaleString()}개`))
+    .setFooter({ text: `${entries.length}명 표시` })
     .setTimestamp();
 
   await interaction.editReply({ embeds: [embed] });
@@ -113,6 +116,7 @@ async function handleOverall(interaction: ChatInputCommandInteraction) {
       { name: "🔊 음성채널 사용 유저 수", value: `${stats.voiceActiveUsers.toLocaleString()}명`, inline: true },
       { name: "​", value: "​", inline: true }
     )
+    .setFooter({ text: "실시간 스냅샷 — 접속 중인 음성 세션은 지금 기준으로 반영됩니다" })
     .setTimestamp();
 
   await interaction.editReply({ embeds: [embed] });

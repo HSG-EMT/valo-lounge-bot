@@ -3,7 +3,6 @@ import { prisma } from "../config/prisma";
 import { cumulativeBenefits, getTier, levelFromTotalXp, MAX_LEVEL, progressBar } from "../config/levels";
 import { ensureUser } from "../services/points.service";
 import { Command } from "../types/command";
-import { VALO_RED } from "../utils/embed";
 
 export const levelCommand: Command = {
   data: new SlashCommandBuilder()
@@ -28,9 +27,10 @@ export const levelCommand: Command = {
       : `${progressBar(xpIntoLevel, xpToNextLevel)} ${xpIntoLevel} / ${xpToNextLevel} XP`;
 
     const embed = new EmbedBuilder()
-      .setColor(VALO_RED)
+      .setColor(tier.color)
       .setAuthor({ name: "🎮 VALO LOUNGE LEVEL" })
       .setTitle(`「 ${tier.emoji} ${target.username} — Lv.${level} ${tier.name} 」`)
+      .setThumbnail(target.displayAvatarURL())
       .setDescription(
         `┌ 다음 레벨까지\n│ ${progressLine}\n└ 누적 XP: ${totalXp.toLocaleString()}`
       )

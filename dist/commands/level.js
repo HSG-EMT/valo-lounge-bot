@@ -5,7 +5,6 @@ const discord_js_1 = require("discord.js");
 const prisma_1 = require("../config/prisma");
 const levels_1 = require("../config/levels");
 const points_service_1 = require("../services/points.service");
-const embed_1 = require("../utils/embed");
 exports.levelCommand = {
     data: new discord_js_1.SlashCommandBuilder()
         .setName("레벨")
@@ -24,9 +23,10 @@ exports.levelCommand = {
             ? `${(0, levels_1.progressBar)(1, 1)} MAX`
             : `${(0, levels_1.progressBar)(xpIntoLevel, xpToNextLevel)} ${xpIntoLevel} / ${xpToNextLevel} XP`;
         const embed = new discord_js_1.EmbedBuilder()
-            .setColor(embed_1.VALO_RED)
+            .setColor(tier.color)
             .setAuthor({ name: "🎮 VALO LOUNGE LEVEL" })
             .setTitle(`「 ${tier.emoji} ${target.username} — Lv.${level} ${tier.name} 」`)
+            .setThumbnail(target.displayAvatarURL())
             .setDescription(`┌ 다음 레벨까지\n│ ${progressLine}\n└ 누적 XP: ${totalXp.toLocaleString()}`)
             .addFields({
             name: `${tier.emoji} ${tier.name} 등급 혜택`,

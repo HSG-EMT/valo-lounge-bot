@@ -37,6 +37,7 @@ async function handleUser(interaction) {
         .setColor(embed_1.VALO_RED)
         .setAuthor({ name: "📊 VALO LOUNGE STATS" })
         .setTitle(`「 ${target.username} 사용량 조사 」`)
+        .setThumbnail(target.displayAvatarURL())
         .addFields({ name: "🔊 누적 음성 채널 시간", value: (0, stats_service_1.formatDuration)(voiceSeconds), inline: true }, { name: "💬 누적 메시지 수", value: `${(messageStat?.totalCount ?? 0).toLocaleString()}개`, inline: true }, { name: "📅 오늘 메시지 수", value: `${(messageStat?.todayCount ?? 0).toLocaleString()}개`, inline: true })
         .setFooter({
         text: messageStat?.lastMessageAt
@@ -55,6 +56,7 @@ async function handleVoiceRanking(interaction) {
         .setAuthor({ name: "📊 VALO LOUNGE STATS" })
         .setTitle("「 🔊 음성 채널 사용량 순위 」")
         .setDescription(leaderboardDescription(entries, stats_service_1.formatDuration))
+        .setFooter({ text: `${entries.length}명 표시 · 접속 중인 세션은 지금 기준으로 반영됩니다` })
         .setTimestamp();
     await interaction.editReply({ embeds: [embed] });
 }
@@ -67,6 +69,7 @@ async function handleMessageRanking(interaction) {
         .setAuthor({ name: "📊 VALO LOUNGE STATS" })
         .setTitle("「 💬 메시지 수 순위 」")
         .setDescription(leaderboardDescription(entries, (v) => `${v.toLocaleString()}개`))
+        .setFooter({ text: `${entries.length}명 표시` })
         .setTimestamp();
     await interaction.editReply({ embeds: [embed] });
 }
@@ -79,6 +82,7 @@ async function handleOverall(interaction) {
         .setAuthor({ name: "📊 VALO LOUNGE STATS" })
         .setTitle("「 📊 서버 전체 통계 」")
         .addFields({ name: "👥 현재 인원", value: `${stats.currentMemberCount.toLocaleString()}명`, inline: true }, { name: "🔊 현재 음성 접속", value: `${stats.currentVoiceCount.toLocaleString()}명`, inline: true }, { name: "​", value: "​", inline: true }, { name: "💬 누적 메시지 수", value: `${stats.totalMessages.toLocaleString()}개`, inline: true }, { name: "💬 메시지 남긴 유저 수", value: `${stats.messageActiveUsers.toLocaleString()}명`, inline: true }, { name: "​", value: "​", inline: true }, { name: "🔊 누적 음성 채널 시간", value: (0, stats_service_1.formatDuration)(stats.totalVoiceSeconds), inline: true }, { name: "🔊 음성채널 사용 유저 수", value: `${stats.voiceActiveUsers.toLocaleString()}명`, inline: true }, { name: "​", value: "​", inline: true })
+        .setFooter({ text: "실시간 스냅샷 — 접속 중인 음성 세션은 지금 기준으로 반영됩니다" })
         .setTimestamp();
     await interaction.editReply({ embeds: [embed] });
 }
