@@ -10,10 +10,12 @@ import { fishingShopCommand } from "./commands/fishingShop";
 import { luckCommand } from "./commands/luck";
 import { matchHistoryCommand } from "./commands/matchHistory";
 import { slotCommand } from "./commands/slot";
+import { statsCommand } from "./commands/stats";
 import { stockCommand } from "./commands/stock";
 import { teamCommand } from "./commands/team";
 import { registerGuildStats } from "./events/guildStats";
 import { registerInteractionCreate } from "./events/interactionCreate";
+import { registerMessageStats } from "./events/messageStats";
 import { registerNoticeSync } from "./events/noticeSync";
 import { registerReady } from "./events/ready";
 import { registerServerLogging } from "./events/serverLogging";
@@ -36,6 +38,7 @@ for (const command of [
   stockCommand,
   slotCommand,
   achievementsCommand,
+  statsCommand,
 ]) {
   commands.set(command.data.name, command);
 }
@@ -60,6 +63,7 @@ registerGuildStats(client);
 registerVoiceTracking(client);
 registerStockMarket(client);
 registerServerLogging(client);
+registerMessageStats(client);
 
 client.once(Events.ClientReady, () => {
   backfillNotices(client).catch((err) => console.error("Notice backfill failed:", err));

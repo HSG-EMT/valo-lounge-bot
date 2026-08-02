@@ -35,4 +35,11 @@ export const env = {
     messageEdit: process.env.LOG_CHANNEL_MESSAGE_EDIT ?? "",
     messageDelete: process.env.LOG_CHANNEL_MESSAGE_DELETE ?? "",
   },
+
+  // Comma-separated Discord role IDs allowed to use /통계 (admin usage-lookup
+  // command). A member needs at least one of these roles.
+  statsRoleIds: (process.env.STATS_ROLE_IDS ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean),
 };

@@ -34,6 +34,7 @@ model User {
   hostedAuctions    AuctionRoom[]
   stockHoldings     StockHolding[]
   achievements      Achievement[]
+  messageStat       MessageStat?
 
   @@map("users")
 }
@@ -98,6 +99,23 @@ model VoiceSession {
   @@index([userId])
   @@index([leftAt])
   @@map("voice_sessions")
+}
+
+// Lightweight running counter, not a full message log — written by this bot's
+// MessageCreate listener, read by the /통계 admin command. todayCount/todayDate
+// roll over at KST midnight, same pattern as GuildStats.
+model MessageStat {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  totalCount    Int       @default(0)
+  todayCount    Int       @default(0)
+  todayDate     String // YYYY-MM-DD (KST)
+  lastMessageAt DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("message_stats")
 }
 
 // ── 경매 시스템 (팀장 포인트 경매 드래프트, teambid.app류) ──────

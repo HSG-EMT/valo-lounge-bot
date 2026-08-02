@@ -10,6 +10,7 @@ import { fishingShopCommand } from "./commands/fishingShop";
 import { luckCommand } from "./commands/luck";
 import { matchHistoryCommand } from "./commands/matchHistory";
 import { slotCommand } from "./commands/slot";
+import { statsCommand } from "./commands/stats";
 import { stockCommand } from "./commands/stock";
 import { teamCommand } from "./commands/team";
 
@@ -26,6 +27,7 @@ const commands = [
   stockCommand,
   slotCommand,
   achievementsCommand,
+  statsCommand,
 ].map((c) => c.data.toJSON());
 
 const rest = new REST().setToken(env.discordBotToken);

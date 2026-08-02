@@ -12,6 +12,7 @@ const fishingShop_1 = require("./commands/fishingShop");
 const luck_1 = require("./commands/luck");
 const matchHistory_1 = require("./commands/matchHistory");
 const slot_1 = require("./commands/slot");
+const stats_1 = require("./commands/stats");
 const stock_1 = require("./commands/stock");
 const team_1 = require("./commands/team");
 const commands = [
@@ -27,6 +28,7 @@ const commands = [
     stock_1.stockCommand,
     slot_1.slotCommand,
     achievements_1.achievementsCommand,
+    stats_1.statsCommand,
 ].map((c) => c.data.toJSON());
 const rest = new discord_js_1.REST().setToken(env_1.env.discordBotToken);
 async function main() {

@@ -12,10 +12,12 @@ const fishingShop_1 = require("./commands/fishingShop");
 const luck_1 = require("./commands/luck");
 const matchHistory_1 = require("./commands/matchHistory");
 const slot_1 = require("./commands/slot");
+const stats_1 = require("./commands/stats");
 const stock_1 = require("./commands/stock");
 const team_1 = require("./commands/team");
 const guildStats_1 = require("./events/guildStats");
 const interactionCreate_1 = require("./events/interactionCreate");
+const messageStats_1 = require("./events/messageStats");
 const noticeSync_1 = require("./events/noticeSync");
 const ready_1 = require("./events/ready");
 const serverLogging_1 = require("./events/serverLogging");
@@ -36,6 +38,7 @@ for (const command of [
     stock_1.stockCommand,
     slot_1.slotCommand,
     achievements_1.achievementsCommand,
+    stats_1.statsCommand,
 ]) {
     commands.set(command.data.name, command);
 }
@@ -58,6 +61,7 @@ const client = new discord_js_1.Client({
 (0, voiceTracking_1.registerVoiceTracking)(client);
 (0, stockMarket_1.registerStockMarket)(client);
 (0, serverLogging_1.registerServerLogging)(client);
+(0, messageStats_1.registerMessageStats)(client);
 client.once(discord_js_1.Events.ClientReady, () => {
     (0, notice_service_1.backfillNotices)(client).catch((err) => console.error("Notice backfill failed:", err));
 });
