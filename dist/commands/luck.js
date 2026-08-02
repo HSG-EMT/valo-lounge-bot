@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.luckCommand = void 0;
 const discord_js_1 = require("discord.js");
 const prisma_1 = require("../config/prisma");
+const levels_1 = require("../config/levels");
+const level_service_1 = require("../services/level.service");
 const points_service_1 = require("../services/points.service");
 const cooldown_1 = require("../utils/cooldown");
 const embed_1 = require("../utils/embed");
@@ -47,11 +49,12 @@ exports.luckCommand = {
         await prisma_1.prisma.statusLog.create({
             data: { userId: user.id, action: ACTION, detail: fortune.tier },
         });
+        const xpResult = await (0, level_service_1.addXp)(interaction.user.id, interaction.user.username, levels_1.XP_MINIGAME);
         await interaction.editReply({
             embeds: [
                 (0, embed_1.buildEmbed)({
                     title: `${fortune.emoji} 오늘의 운세 — ${fortune.tier}`,
-                    description: fortune.message,
+                    description: `${fortune.message}${(0, level_service_1.levelUpBanner)(xpResult)}`,
                     author: "🔮 VALO LOUNGE",
                     color: fortune.color,
                 }),

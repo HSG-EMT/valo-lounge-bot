@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.coinCommand = void 0;
 const discord_js_1 = require("discord.js");
 const prisma_1 = require("../config/prisma");
+const levels_1 = require("../config/levels");
+const level_service_1 = require("../services/level.service");
 const points_service_1 = require("../services/points.service");
 const cooldown_1 = require("../utils/cooldown");
 const embed_1 = require("../utils/embed");
@@ -39,11 +41,12 @@ exports.coinCommand = {
                 data: { userId: user.id, action: ACTION, detail: `+${amount}P` },
             }),
         ]);
+        const xpResult = await (0, level_service_1.addXp)(interaction.user.id, interaction.user.username, levels_1.XP_MINIGAME);
         await interaction.editReply({
             embeds: [
                 (0, embed_1.buildEmbed)({
                     title: "🪙 오늘의 코인",
-                    description: `┌ 오늘의 코인 획득\n└ **+${amount}P**`,
+                    description: `┌ 오늘의 코인 획득\n└ **+${amount}P**${(0, level_service_1.levelUpBanner)(xpResult)}`,
                     author: "🪙 VALO LOUNGE",
                     footer: `현재 보유 포인트: ${serverPoint.points.toLocaleString()}P`,
                 }),

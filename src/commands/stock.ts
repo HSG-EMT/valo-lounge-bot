@@ -1,8 +1,10 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { prisma } from "../config/prisma";
 import { SEED_STOCKS } from "../config/stocks";
+import { XP_MINIGAME } from "../config/levels";
 import { ensureUser } from "../services/points.service";
 import { tryUnlockAchievement, unlockBanner } from "../services/achievement.service";
+import { addXp, levelUpBanner } from "../services/level.service";
 import { Command } from "../types/command";
 import { buildEmbed, CASINO_TEAL } from "../utils/embed";
 
@@ -95,12 +97,14 @@ async function handleBuy(interaction: ChatInputCommandInteraction) {
     }),
   ]);
 
+  const xpResult = await addXp(interaction.user.id, interaction.user.username, XP_MINIGAME);
+
   const embed = new EmbedBuilder()
     .setColor(CASINO_TEAL)
     .setAuthor({ name: "💹 VALO LOUNGE STOCK EXCHANGE" })
     .setTitle(`「 📈 ${stock.symbol} 매수 체결 」`)
     .setDescription(
-      `┌ ${stock.name}\n│ ${quantity}주 × ${stock.price.toLocaleString()}CP = **-${cost.toLocaleString()}CP**\n└ 평단가 **${newAvg.toLocaleString()}CP** · 보유 **${newQty}주**`
+      `┌ ${stock.name}\n│ ${quantity}주 × ${stock.price.toLocaleString()}CP = **-${cost.toLocaleString()}CP**\n└ 평단가 **${newAvg.toLocaleString()}CP** · 보유 **${newQty}주**${levelUpBanner(xpResult)}`
     )
     .setFooter({ text: `잔여 CP: ${casinoPoint.points.toLocaleString()}CP` })
     .setTimestamp();
@@ -175,6 +179,9 @@ async function handleSell(interaction: ChatInputCommandInteraction) {
     const unlocked = await tryUnlockAchievement(user.id, "STOCK_PROFIT_10000");
     if (unlocked) description += unlockBanner(unlocked);
   }
+
+  const xpResult = await addXp(interaction.user.id, interaction.user.username, XP_MINIGAME);
+  description += levelUpBanner(xpResult);
 
   const embed = new EmbedBuilder()
     .setColor(CASINO_TEAL)

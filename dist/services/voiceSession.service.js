@@ -17,21 +17,23 @@ async function openVoiceSession(discordId, username, channelId, channelName) {
         data: { userId: user.id, channelId, channelName, joinedAt: new Date() },
     });
 }
+/** Returns the closed session's duration in seconds, or null if there was nothing open to close (used to grant voice XP). */
 async function closeVoiceSession(discordId, channelId, at = new Date()) {
     const user = await prisma_1.prisma.user.findUnique({ where: { discordId } });
     if (!user)
-        return;
+        return null;
     const open = await prisma_1.prisma.voiceSession.findFirst({
         where: { userId: user.id, channelId, leftAt: null },
         orderBy: { joinedAt: "desc" },
     });
     if (!open)
-        return;
+        return null;
     const durationSeconds = Math.max(0, Math.round((at.getTime() - open.joinedAt.getTime()) / 1000));
     await prisma_1.prisma.voiceSession.update({
         where: { id: open.id },
         data: { leftAt: at, durationSeconds },
     });
+    return durationSeconds;
 }
 /**
  * Runs once on bot startup. The bot can't know what happened to voice channels

@@ -1,7 +1,9 @@
 import { SlashCommandBuilder } from "discord.js";
 import { prisma } from "../config/prisma";
+import { hasAttendanceBonus, levelFromTotalXp, XP_ATTENDANCE_BASE, XP_ATTENDANCE_SILVER_BONUS } from "../config/levels";
 import { ensureUser } from "../services/points.service";
 import { tryUnlockAchievement, unlockBanner } from "../services/achievement.service";
+import { addXp, levelUpBanner } from "../services/level.service";
 import { Command } from "../types/command";
 import { isSameDay, isYesterday } from "../utils/date";
 import { buildEmbed } from "../utils/embed";
@@ -79,6 +81,12 @@ export const attendanceCommand: Command = {
       const unlocked = await tryUnlockAchievement(user.id, achievementKey);
       if (unlocked) description += unlockBanner(unlocked);
     }
+
+    const userLevel = await prisma.userLevel.findUnique({ where: { userId: user.id } });
+    const currentLevel = levelFromTotalXp(userLevel?.totalXp ?? 0).level;
+    const xpGain = hasAttendanceBonus(currentLevel) ? XP_ATTENDANCE_BASE + XP_ATTENDANCE_SILVER_BONUS : XP_ATTENDANCE_BASE;
+    const xpResult = await addXp(interaction.user.id, interaction.user.username, xpGain);
+    description += levelUpBanner(xpResult);
 
     await interaction.editReply({
       embeds: [

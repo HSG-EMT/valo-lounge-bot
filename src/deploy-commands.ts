@@ -7,12 +7,14 @@ import { coinCommand } from "./commands/coin";
 import { diceCommand } from "./commands/dice";
 import { fishingCommand } from "./commands/fishing";
 import { fishingShopCommand } from "./commands/fishingShop";
+import { levelCommand } from "./commands/level";
 import { luckCommand } from "./commands/luck";
 import { matchHistoryCommand } from "./commands/matchHistory";
 import { slotCommand } from "./commands/slot";
 import { statsCommand } from "./commands/stats";
 import { stockCommand } from "./commands/stock";
 import { teamCommand } from "./commands/team";
+import { tierBonusCommand } from "./commands/tierBonus";
 
 const commands = [
   diceCommand,
@@ -28,6 +30,8 @@ const commands = [
   slotCommand,
   achievementsCommand,
   statsCommand,
+  levelCommand,
+  tierBonusCommand,
 ].map((c) => c.data.toJSON());
 
 const rest = new REST().setToken(env.discordBotToken);

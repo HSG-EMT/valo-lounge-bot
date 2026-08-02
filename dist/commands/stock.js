@@ -4,8 +4,10 @@ exports.stockCommand = void 0;
 const discord_js_1 = require("discord.js");
 const prisma_1 = require("../config/prisma");
 const stocks_1 = require("../config/stocks");
+const levels_1 = require("../config/levels");
 const points_service_1 = require("../services/points.service");
 const achievement_service_1 = require("../services/achievement.service");
+const level_service_1 = require("../services/level.service");
 const embed_1 = require("../utils/embed");
 const STOCK_CHOICES = stocks_1.SEED_STOCKS.map((s) => ({ name: `${s.symbol} · ${s.name}`, value: s.symbol }));
 function pctChange(price, prevPrice) {
@@ -84,11 +86,12 @@ async function handleBuy(interaction) {
             data: { userId: user.id, action: "STOCK_BUY", detail: `${stock.symbol} ${quantity}주 매수 -${cost}CP` },
         }),
     ]);
+    const xpResult = await (0, level_service_1.addXp)(interaction.user.id, interaction.user.username, levels_1.XP_MINIGAME);
     const embed = new discord_js_1.EmbedBuilder()
         .setColor(embed_1.CASINO_TEAL)
         .setAuthor({ name: "💹 VALO LOUNGE STOCK EXCHANGE" })
         .setTitle(`「 📈 ${stock.symbol} 매수 체결 」`)
-        .setDescription(`┌ ${stock.name}\n│ ${quantity}주 × ${stock.price.toLocaleString()}CP = **-${cost.toLocaleString()}CP**\n└ 평단가 **${newAvg.toLocaleString()}CP** · 보유 **${newQty}주**`)
+        .setDescription(`┌ ${stock.name}\n│ ${quantity}주 × ${stock.price.toLocaleString()}CP = **-${cost.toLocaleString()}CP**\n└ 평단가 **${newAvg.toLocaleString()}CP** · 보유 **${newQty}주**${(0, level_service_1.levelUpBanner)(xpResult)}`)
         .setFooter({ text: `잔여 CP: ${casinoPoint.points.toLocaleString()}CP` })
         .setTimestamp();
     await interaction.editReply({ embeds: [embed] });
@@ -155,6 +158,8 @@ async function handleSell(interaction) {
         if (unlocked)
             description += (0, achievement_service_1.unlockBanner)(unlocked);
     }
+    const xpResult = await (0, level_service_1.addXp)(interaction.user.id, interaction.user.username, levels_1.XP_MINIGAME);
+    description += (0, level_service_1.levelUpBanner)(xpResult);
     const embed = new discord_js_1.EmbedBuilder()
         .setColor(embed_1.CASINO_TEAL)
         .setAuthor({ name: "💹 VALO LOUNGE STOCK EXCHANGE" })

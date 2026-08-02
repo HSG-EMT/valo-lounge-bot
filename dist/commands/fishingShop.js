@@ -4,8 +4,10 @@ exports.fishingShopCommand = void 0;
 const discord_js_1 = require("discord.js");
 const prisma_1 = require("../config/prisma");
 const fishing_1 = require("../config/fishing");
+const levels_1 = require("../config/levels");
 const points_service_1 = require("../services/points.service");
 const achievement_service_1 = require("../services/achievement.service");
+const level_service_1 = require("../services/level.service");
 const embed_1 = require("../utils/embed");
 exports.fishingShopCommand = {
     data: new discord_js_1.SlashCommandBuilder()
@@ -60,6 +62,8 @@ exports.fishingShopCommand = {
                 if (unlocked)
                     boughtDescription += (0, achievement_service_1.unlockBanner)(unlocked);
             }
+            const xpResult = await (0, level_service_1.addXp)(interaction.user.id, interaction.user.username, levels_1.XP_MINIGAME);
+            boughtDescription += (0, level_service_1.levelUpBanner)(xpResult);
             const boughtEmbed = new discord_js_1.EmbedBuilder()
                 .setColor(embed_1.CASINO_TEAL)
                 .setAuthor({ name: "🎣 VALO LOUNGE FISHING SHOP" })

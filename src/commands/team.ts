@@ -1,4 +1,6 @@
 import { EmbedBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
+import { XP_MINIGAME } from "../config/levels";
+import { addXp, levelUpBanner } from "../services/level.service";
 import { Command } from "../types/command";
 
 const TEAM_BALANCER_PURPLE = 0x8b5cf6;
@@ -61,11 +63,13 @@ export const teamCommand: Command = {
     const teams: string[][] = Array.from({ length: teamCount }, () => []);
     shuffled.forEach((m, i) => teams[i % teamCount].push(m.id));
 
+    const xpResult = await addXp(interaction.user.id, interaction.user.username, XP_MINIGAME);
+
     const embed = new EmbedBuilder()
       .setColor(TEAM_BALANCER_PURPLE)
       .setAuthor({ name: "⚡ TEAM BALANCER SYSTEM" })
       .setTitle("「 🎲 팀 자동 분배 완료 」")
-      .setDescription("◆ 현재 음성채널 기준 자동 팀 분배\n◆ 공정한 랜덤 셔플 적용")
+      .setDescription(`◆ 현재 음성채널 기준 자동 팀 분배\n◆ 공정한 랜덤 셔플 적용${levelUpBanner(xpResult)}`)
       .addFields(
         teams.map((team, i) => ({
           name: `┌ ${TEAM_DOT[i % TEAM_DOT.length]} TEAM ${i + 1} (${team.length}명)`,

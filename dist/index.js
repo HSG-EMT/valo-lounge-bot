@@ -9,12 +9,14 @@ const coin_1 = require("./commands/coin");
 const dice_1 = require("./commands/dice");
 const fishing_1 = require("./commands/fishing");
 const fishingShop_1 = require("./commands/fishingShop");
+const level_1 = require("./commands/level");
 const luck_1 = require("./commands/luck");
 const matchHistory_1 = require("./commands/matchHistory");
 const slot_1 = require("./commands/slot");
 const stats_1 = require("./commands/stats");
 const stock_1 = require("./commands/stock");
 const team_1 = require("./commands/team");
+const tierBonus_1 = require("./commands/tierBonus");
 const guildStats_1 = require("./events/guildStats");
 const interactionCreate_1 = require("./events/interactionCreate");
 const messageStats_1 = require("./events/messageStats");
@@ -39,6 +41,8 @@ for (const command of [
     slot_1.slotCommand,
     achievements_1.achievementsCommand,
     stats_1.statsCommand,
+    level_1.levelCommand,
+    tierBonus_1.tierBonusCommand,
 ]) {
     commands.set(command.data.name, command);
 }

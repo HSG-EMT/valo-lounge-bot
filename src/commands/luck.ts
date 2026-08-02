@@ -1,5 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { prisma } from "../config/prisma";
+import { XP_MINIGAME } from "../config/levels";
+import { addXp, levelUpBanner } from "../services/level.service";
 import { ensureUser } from "../services/points.service";
 import { Command } from "../types/command";
 import { formatRemaining, getCooldownRemainingMs } from "../utils/cooldown";
@@ -54,11 +56,13 @@ export const luckCommand: Command = {
       data: { userId: user.id, action: ACTION, detail: fortune.tier },
     });
 
+    const xpResult = await addXp(interaction.user.id, interaction.user.username, XP_MINIGAME);
+
     await interaction.editReply({
       embeds: [
         buildEmbed({
           title: `${fortune.emoji} 오늘의 운세 — ${fortune.tier}`,
-          description: fortune.message,
+          description: `${fortune.message}${levelUpBanner(xpResult)}`,
           author: "🔮 VALO LOUNGE",
           color: fortune.color,
         }),

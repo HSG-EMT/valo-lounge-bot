@@ -3,8 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.attendanceCommand = void 0;
 const discord_js_1 = require("discord.js");
 const prisma_1 = require("../config/prisma");
+const levels_1 = require("../config/levels");
 const points_service_1 = require("../services/points.service");
 const achievement_service_1 = require("../services/achievement.service");
+const level_service_1 = require("../services/level.service");
 const date_1 = require("../utils/date");
 const embed_1 = require("../utils/embed");
 const BASE_REWARD = 20;
@@ -69,6 +71,11 @@ exports.attendanceCommand = {
             if (unlocked)
                 description += (0, achievement_service_1.unlockBanner)(unlocked);
         }
+        const userLevel = await prisma_1.prisma.userLevel.findUnique({ where: { userId: user.id } });
+        const currentLevel = (0, levels_1.levelFromTotalXp)(userLevel?.totalXp ?? 0).level;
+        const xpGain = (0, levels_1.hasAttendanceBonus)(currentLevel) ? levels_1.XP_ATTENDANCE_BASE + levels_1.XP_ATTENDANCE_SILVER_BONUS : levels_1.XP_ATTENDANCE_BASE;
+        const xpResult = await (0, level_service_1.addXp)(interaction.user.id, interaction.user.username, xpGain);
+        description += (0, level_service_1.levelUpBanner)(xpResult);
         await interaction.editReply({
             embeds: [
                 (0, embed_1.buildEmbed)({

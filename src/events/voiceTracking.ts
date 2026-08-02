@@ -1,5 +1,7 @@
 import { Client, Events } from "discord.js";
 import { env } from "../config/env";
+import { XP_PER_VOICE_MINUTE } from "../config/levels";
+import { addXp } from "../services/level.service";
 import { closeVoiceSession, openVoiceSession, reconcileVoiceSessions } from "../services/voiceSession.service";
 
 export function registerVoiceTracking(client: Client): void {
@@ -15,7 +17,11 @@ export function registerVoiceTracking(client: Client): void {
 
     try {
       if (oldChannelId) {
-        await closeVoiceSession(member.id, oldChannelId);
+        const durationSeconds = await closeVoiceSession(member.id, oldChannelId);
+        const xpGain = Math.floor((durationSeconds ?? 0) / 60) * XP_PER_VOICE_MINUTE;
+        if (xpGain > 0) {
+          await addXp(member.id, member.user.username, xpGain);
+        }
       }
       if (newChannelId) {
         const channelName = newState.channel?.name ?? "알 수 없음";

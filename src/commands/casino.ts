@@ -1,7 +1,9 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { prisma } from "../config/prisma";
+import { XP_MINIGAME } from "../config/levels";
 import { ensureUser } from "../services/points.service";
 import { tryUnlockAchievement, unlockBanner } from "../services/achievement.service";
+import { addXp, levelUpBanner } from "../services/level.service";
 import { Command } from "../types/command";
 import { buildEmbed, CASINO_TEAL } from "../utils/embed";
 
@@ -66,6 +68,9 @@ export const casinoCommand: Command = {
       const unlocked = await tryUnlockAchievement(user.id, "CASINO_STREAK_5");
       if (unlocked) description += unlockBanner(unlocked);
     }
+
+    const xpResult = await addXp(interaction.user.id, interaction.user.username, XP_MINIGAME);
+    description += levelUpBanner(xpResult);
 
     const embed = new EmbedBuilder()
       .setColor(CASINO_TEAL)

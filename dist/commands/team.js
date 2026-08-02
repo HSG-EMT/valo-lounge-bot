@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.teamCommand = void 0;
 const discord_js_1 = require("discord.js");
+const levels_1 = require("../config/levels");
+const level_service_1 = require("../services/level.service");
 const TEAM_BALANCER_PURPLE = 0x8b5cf6;
 const TEAM_DOT = ["🔵", "🟣", "🟢", "🟡", "🔴", "🟠"];
 function shuffle(items) {
@@ -49,11 +51,12 @@ exports.teamCommand = {
         const shuffled = shuffle(participants);
         const teams = Array.from({ length: teamCount }, () => []);
         shuffled.forEach((m, i) => teams[i % teamCount].push(m.id));
+        const xpResult = await (0, level_service_1.addXp)(interaction.user.id, interaction.user.username, levels_1.XP_MINIGAME);
         const embed = new discord_js_1.EmbedBuilder()
             .setColor(TEAM_BALANCER_PURPLE)
             .setAuthor({ name: "⚡ TEAM BALANCER SYSTEM" })
             .setTitle("「 🎲 팀 자동 분배 완료 」")
-            .setDescription("◆ 현재 음성채널 기준 자동 팀 분배\n◆ 공정한 랜덤 셔플 적용")
+            .setDescription(`◆ 현재 음성채널 기준 자동 팀 분배\n◆ 공정한 랜덤 셔플 적용${(0, level_service_1.levelUpBanner)(xpResult)}`)
             .addFields(teams.map((team, i) => ({
             name: `┌ ${TEAM_DOT[i % TEAM_DOT.length]} TEAM ${i + 1} (${team.length}명)`,
             value: team.map((id) => `│ 🎯 <@${id}>`).join("\n"),

@@ -1,8 +1,10 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { prisma } from "../config/prisma";
 import { ROD_TIERS } from "../config/fishing";
+import { XP_MINIGAME } from "../config/levels";
 import { ensureUser } from "../services/points.service";
 import { tryUnlockAchievement, unlockBanner } from "../services/achievement.service";
+import { addXp, levelUpBanner } from "../services/level.service";
 import { Command } from "../types/command";
 import { buildEmbed, CASINO_TEAL } from "../utils/embed";
 
@@ -65,6 +67,9 @@ export const fishingShopCommand: Command = {
         const unlocked = await tryUnlockAchievement(user.id, "ROD_MAX");
         if (unlocked) boughtDescription += unlockBanner(unlocked);
       }
+
+      const xpResult = await addXp(interaction.user.id, interaction.user.username, XP_MINIGAME);
+      boughtDescription += levelUpBanner(xpResult);
 
       const boughtEmbed = new EmbedBuilder()
         .setColor(CASINO_TEAL)

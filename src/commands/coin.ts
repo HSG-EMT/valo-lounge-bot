@@ -1,5 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { prisma } from "../config/prisma";
+import { XP_MINIGAME } from "../config/levels";
+import { addXp, levelUpBanner } from "../services/level.service";
 import { ensureUser } from "../services/points.service";
 import { Command } from "../types/command";
 import { formatRemaining, getCooldownRemainingMs } from "../utils/cooldown";
@@ -45,11 +47,13 @@ export const coinCommand: Command = {
       }),
     ]);
 
+    const xpResult = await addXp(interaction.user.id, interaction.user.username, XP_MINIGAME);
+
     await interaction.editReply({
       embeds: [
         buildEmbed({
           title: "🪙 오늘의 코인",
-          description: `┌ 오늘의 코인 획득\n└ **+${amount}P**`,
+          description: `┌ 오늘의 코인 획득\n└ **+${amount}P**${levelUpBanner(xpResult)}`,
           author: "🪙 VALO LOUNGE",
           footer: `현재 보유 포인트: ${serverPoint.points.toLocaleString()}P`,
         }),

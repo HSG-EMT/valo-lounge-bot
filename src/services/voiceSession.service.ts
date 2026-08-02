@@ -16,21 +16,23 @@ export async function openVoiceSession(discordId: string, username: string, chan
   });
 }
 
-export async function closeVoiceSession(discordId: string, channelId: string, at: Date = new Date()) {
+/** Returns the closed session's duration in seconds, or null if there was nothing open to close (used to grant voice XP). */
+export async function closeVoiceSession(discordId: string, channelId: string, at: Date = new Date()): Promise<number | null> {
   const user = await prisma.user.findUnique({ where: { discordId } });
-  if (!user) return;
+  if (!user) return null;
 
   const open = await prisma.voiceSession.findFirst({
     where: { userId: user.id, channelId, leftAt: null },
     orderBy: { joinedAt: "desc" },
   });
-  if (!open) return;
+  if (!open) return null;
 
   const durationSeconds = Math.max(0, Math.round((at.getTime() - open.joinedAt.getTime()) / 1000));
   await prisma.voiceSession.update({
     where: { id: open.id },
     data: { leftAt: at, durationSeconds },
   });
+  return durationSeconds;
 }
 
 /**
