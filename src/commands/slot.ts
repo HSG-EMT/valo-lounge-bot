@@ -1,6 +1,6 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { prisma } from "../config/prisma";
-import { spinSlot } from "../config/slot";
+import { SLOT_SYMBOLS, spinSlot } from "../config/slot";
 import { XP_MINIGAME } from "../config/levels";
 import { ensureUser } from "../services/points.service";
 import { tryUnlockAchievement, unlockBanner } from "../services/achievement.service";
@@ -11,6 +11,22 @@ import { buildEmbed, CASINO_TEAL } from "../utils/embed";
 const MIN_BET = 10;
 const ACTION = "SLOT";
 const JACKPOT_EMOJI = "7️⃣";
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function randomReelEmoji(): string {
+  return SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)].emoji;
+}
+
+function spinningEmbed(reels: string[], bet: number): EmbedBuilder {
+  return new EmbedBuilder()
+    .setColor(CASINO_TEAL)
+    .setAuthor({ name: "🎰 VALO LOUNGE SLOTS" })
+    .setTitle("「 🎰 슬롯머신 — 돌아가는 중... 」")
+    .setDescription(`┌ [ ${reels.join(" | ")} ]\n│ 베팅 ${bet.toLocaleString()}CP\n└ 릴이 멈추는 중...`);
+}
 
 export const slotCommand: Command = {
   data: new SlashCommandBuilder()
@@ -45,6 +61,21 @@ export const slotCommand: Command = {
     }
 
     const result = spinSlot();
+    const finalEmojis = result.reels.map((r) => r.emoji);
+
+    // Reels stop one at a time, left to right, like a real slot machine —
+    // the outcome is already decided above, this just plays it out visually.
+    const spinStages: string[][] = [
+      [randomReelEmoji(), randomReelEmoji(), randomReelEmoji()],
+      [randomReelEmoji(), randomReelEmoji(), randomReelEmoji()],
+      [finalEmojis[0], randomReelEmoji(), randomReelEmoji()],
+      [finalEmojis[0], finalEmojis[1], randomReelEmoji()],
+    ];
+    for (const stage of spinStages) {
+      await interaction.editReply({ embeds: [spinningEmbed(stage, bet)] });
+      await sleep(450);
+    }
+
     const payout = Math.round(bet * result.multiplier);
     const delta = payout - bet;
 

@@ -12,6 +12,19 @@ const embed_1 = require("../utils/embed");
 const MIN_BET = 10;
 const ACTION = "SLOT";
 const JACKPOT_EMOJI = "7️⃣";
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function randomReelEmoji() {
+    return slot_1.SLOT_SYMBOLS[Math.floor(Math.random() * slot_1.SLOT_SYMBOLS.length)].emoji;
+}
+function spinningEmbed(reels, bet) {
+    return new discord_js_1.EmbedBuilder()
+        .setColor(embed_1.CASINO_TEAL)
+        .setAuthor({ name: "🎰 VALO LOUNGE SLOTS" })
+        .setTitle("「 🎰 슬롯머신 — 돌아가는 중... 」")
+        .setDescription(`┌ [ ${reels.join(" | ")} ]\n│ 베팅 ${bet.toLocaleString()}CP\n└ 릴이 멈추는 중...`);
+}
 exports.slotCommand = {
     data: new discord_js_1.SlashCommandBuilder()
         .setName("슬롯")
@@ -39,6 +52,19 @@ exports.slotCommand = {
             return;
         }
         const result = (0, slot_1.spinSlot)();
+        const finalEmojis = result.reels.map((r) => r.emoji);
+        // Reels stop one at a time, left to right, like a real slot machine —
+        // the outcome is already decided above, this just plays it out visually.
+        const spinStages = [
+            [randomReelEmoji(), randomReelEmoji(), randomReelEmoji()],
+            [randomReelEmoji(), randomReelEmoji(), randomReelEmoji()],
+            [finalEmojis[0], randomReelEmoji(), randomReelEmoji()],
+            [finalEmojis[0], finalEmojis[1], randomReelEmoji()],
+        ];
+        for (const stage of spinStages) {
+            await interaction.editReply({ embeds: [spinningEmbed(stage, bet)] });
+            await sleep(450);
+        }
         const payout = Math.round(bet * result.multiplier);
         const delta = payout - bet;
         const [casinoPoint] = await prisma_1.prisma.$transaction([

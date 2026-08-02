@@ -7,6 +7,7 @@ import { coinCommand } from "./commands/coin";
 import { diceCommand } from "./commands/dice";
 import { fishingCommand } from "./commands/fishing";
 import { fishingShopCommand } from "./commands/fishingShop";
+import { helpCommand } from "./commands/help";
 import { levelCommand } from "./commands/level";
 import { luckCommand } from "./commands/luck";
 import { matchHistoryCommand } from "./commands/matchHistory";
@@ -43,6 +44,7 @@ for (const command of [
   statsCommand,
   levelCommand,
   tierBonusCommand,
+  helpCommand,
 ]) {
   commands.set(command.data.name, command);
 }

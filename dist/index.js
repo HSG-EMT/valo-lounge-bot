@@ -9,6 +9,7 @@ const coin_1 = require("./commands/coin");
 const dice_1 = require("./commands/dice");
 const fishing_1 = require("./commands/fishing");
 const fishingShop_1 = require("./commands/fishingShop");
+const help_1 = require("./commands/help");
 const level_1 = require("./commands/level");
 const luck_1 = require("./commands/luck");
 const matchHistory_1 = require("./commands/matchHistory");
@@ -43,6 +44,7 @@ for (const command of [
     stats_1.statsCommand,
     level_1.levelCommand,
     tierBonus_1.tierBonusCommand,
+    help_1.helpCommand,
 ]) {
     commands.set(command.data.name, command);
 }

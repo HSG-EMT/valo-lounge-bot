@@ -28,6 +28,7 @@ model User {
   statusLogs        StatusLog[]
   serverPoint       ServerPoint?
   casinoPoint       CasinoPoint?
+  loungeCoin        LoungeCoin?
   eventDraws        EventDraw[]
   attendance        Attendance?
   voiceSessions     VoiceSession[]
@@ -228,6 +229,22 @@ model ServerPoint {
   @@map("server_points")
 }
 
+// Lounge Coin (LC) — website-only currency, this bot never reads/writes it.
+// Mirrored here only to keep the two schema.prisma files in sync (see
+// valo-lounge-server's copy for full field docs).
+model LoungeCoin {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  balance              Int      @default(0)
+  voiceCreditDate      String?
+  voiceCreditedSeconds Int      @default(0)
+  updatedAt            DateTime @updatedAt
+
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("lounge_coins")
+}
+
 // CP (Casino Point) — a separate balance from ServerPoint, earned only via
 // /낚시 (fishing) and spent/won only in /카지노 and the fishing rod shop.
 // Kept isolated from ServerPoint on purpose so casino-style gambling can't
@@ -309,28 +326,34 @@ model StockHolding {
 }
 
 model EventBox {
-  id          String       @id @default(uuid())
-  name        String
-  description String?      @db.Text
-  isActive    Boolean      @default(true)
-  createdAt   DateTime     @default(now())
+  id                 String       @id @default(uuid())
+  name               String
+  description        String?      @db.Text
+  isActive           Boolean      @default(true)
+  costLc             Int?
+  dailyLimit         Boolean      @default(false)
+  voiceHoursRequired Float?
+  createdAt          DateTime     @default(now())
 
-  prizes      EventPrize[]
-  draws       EventDraw[]
+  prizes             EventPrize[]
+  draws              EventDraw[]
 
   @@map("event_boxes")
 }
 
 // Plain String rather than a native enum (kept from when this schema targeted
 // SQLite; left as-is since it already works with MySQL too).
-// Valid values: "DISCORD_ROLE" | "SERVER_POINT" | "EVENT_PRIZE" (enforced in application code).
+// Valid values: "DISCORD_ROLE" | "SERVER_POINT" | "LC_AMOUNT" | "RANDOM_BOX" | "PHYSICAL_ITEM" | "EVENT_PRIZE"
+// (enforced in application code).
 model EventPrize {
   id          String       @id @default(uuid())
   eventBoxId  String
   type        String
   roleId      String?      // Discord role id, when type = DISCORD_ROLE
   pointAmount Int?         // when type = SERVER_POINT
-  prizeName   String?      // when type = EVENT_PRIZE
+  lcAmount    Int?         // when type = LC_AMOUNT
+  nestedBoxId String?      // when type = RANDOM_BOX
+  prizeName   String?      // when type = EVENT_PRIZE or PHYSICAL_ITEM
   weight      Int          @default(1) // random draw weight
   stock       Int?         // null = unlimited
 
@@ -341,15 +364,17 @@ model EventPrize {
 }
 
 model EventDraw {
-  id         String     @id @default(uuid())
-  userId     String
-  eventBoxId String
-  prizeId    String
-  drawnAt    DateTime   @default(now())
+  id               String     @id @default(uuid())
+  userId           String
+  eventBoxId       String
+  prizeId          String
+  needsFulfillment Boolean    @default(false)
+  fulfilledAt      DateTime?
+  drawnAt          DateTime   @default(now())
 
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  eventBox   EventBox   @relation(fields: [eventBoxId], references: [id], onDelete: Cascade)
-  prize      EventPrize @relation(fields: [prizeId], references: [id], onDelete: Cascade)
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventBox         EventBox   @relation(fields: [eventBoxId], references: [id], onDelete: Cascade)
+  prize            EventPrize @relation(fields: [prizeId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("event_draws")
